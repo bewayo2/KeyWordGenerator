@@ -17,7 +17,30 @@ from src.styles import GOOGLE_ADS_STYLE
 
 
 # Load environment variables
-load_dotenv()
+# Try Streamlit secrets first (for Streamlit Cloud), then fall back to .env file (for local development)
+if hasattr(st, "secrets") and st.secrets:
+    # Streamlit Cloud secrets are already loaded
+    pass
+else:
+    # Local development - load from .env file
+    load_dotenv()
+
+# Helper function to get environment variables from Streamlit secrets or os.environ
+def get_env_var(var_name: str, default: str = None) -> str:
+    """Get environment variable from Streamlit secrets or os.environ."""
+    if hasattr(st, "secrets") and st.secrets:
+        try:
+            # Try to get from Streamlit secrets (nested access with dots)
+            # Convert GOOGLE_ADS_CLIENT_ID to google_ads.client_id
+            keys = var_name.lower().split("_")
+            value = st.secrets
+            for key in keys:
+                value = value[key]
+            return value if value else default
+        except (KeyError, AttributeError, TypeError):
+            pass
+    # Fall back to os.environ
+    return os.getenv(var_name, default)
 
 # Page config
 st.set_page_config(
@@ -67,7 +90,7 @@ def main():
         )
         
         # Show warning if using test account
-        customer_id_env = os.getenv("GOOGLE_ADS_CUSTOMER_ID", "")
+        customer_id_env = get_env_var("GOOGLE_ADS_CUSTOMER_ID", "")
         if customer_id_env:
             st.markdown(f"""
             <div style="background-color: #e8f0fe; border-left: 4px solid #1a73e8; border-radius: 4px; padding: 0.75rem; margin: 0.5rem 0;">
@@ -124,12 +147,12 @@ def main():
                 "GOOGLE_ADS_CUSTOMER_ID",
                 "OPENAI_API_KEY",
             ]
-            missing_vars = [var for var in required_vars if not os.getenv(var)]
+            missing_vars = [var for var in required_vars if not get_env_var(var)]
             if missing_vars:
                 st.markdown(f"""
                 <div style="background-color: #fce8e6; border-left: 4px solid #ea4335; border-radius: 4px; padding: 1rem; margin: 1rem 0;">
                     <strong>Missing environment variables:</strong> {', '.join(missing_vars)}<br>
-                    Please check your .env file.
+                    Please check your Streamlit Cloud secrets or .env file.
                 </div>
                 """, unsafe_allow_html=True)
                 return
@@ -138,7 +161,7 @@ def main():
                 try:
                     # Step 1: Create Google Ads client
                     google_ads_client = create_google_ads_client()
-                    customer_id = os.getenv("GOOGLE_ADS_CUSTOMER_ID")
+                    customer_id = get_env_var("GOOGLE_ADS_CUSTOMER_ID")
                     # Remove dashes from customer ID for API calls
                     customer_id_clean = customer_id.replace("-", "") if customer_id else None
 

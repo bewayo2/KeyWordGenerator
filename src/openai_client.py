@@ -8,9 +8,29 @@ from typing import Dict, Any, Optional
 from openai import OpenAI
 
 
+def _get_env_var(var_name: str, default: str = None) -> str:
+    """Get environment variable from Streamlit secrets or os.environ."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and st.secrets:
+            try:
+                # Try to get from Streamlit secrets (nested access with dots)
+                keys = var_name.lower().split("_")
+                value = st.secrets
+                for key in keys:
+                    value = value[key]
+                return value if value else default
+            except (KeyError, AttributeError, TypeError):
+                pass
+    except ImportError:
+        pass
+    # Fall back to os.environ
+    return os.getenv(var_name, default)
+
+
 def create_openai_client() -> OpenAI:
     """Create and return an OpenAI client using environment variables."""
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = _get_env_var("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable is not set")
     return OpenAI(api_key=api_key)

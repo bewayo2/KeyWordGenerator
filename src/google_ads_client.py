@@ -8,18 +8,38 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 
 
+def _get_env_var(var_name: str, default: str = None) -> str:
+    """Get environment variable from Streamlit secrets or os.environ."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and st.secrets:
+            try:
+                # Try to get from Streamlit secrets (nested access with dots)
+                keys = var_name.lower().split("_")
+                value = st.secrets
+                for key in keys:
+                    value = value[key]
+                return value if value else default
+            except (KeyError, AttributeError, TypeError):
+                pass
+    except ImportError:
+        pass
+    # Fall back to os.environ
+    return os.getenv(var_name, default)
+
+
 def create_google_ads_client() -> GoogleAdsClient:
     """Create and return a Google Ads client using environment variables."""
     config = {
-        "developer_token": os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN"),
-        "client_id": os.getenv("GOOGLE_ADS_CLIENT_ID"),
-        "client_secret": os.getenv("GOOGLE_ADS_CLIENT_SECRET"),
-        "refresh_token": os.getenv("GOOGLE_ADS_REFRESH_TOKEN"),
+        "developer_token": _get_env_var("GOOGLE_ADS_DEVELOPER_TOKEN"),
+        "client_id": _get_env_var("GOOGLE_ADS_CLIENT_ID"),
+        "client_secret": _get_env_var("GOOGLE_ADS_CLIENT_SECRET"),
+        "refresh_token": _get_env_var("GOOGLE_ADS_REFRESH_TOKEN"),
         "use_proto_plus": True,
     }
     
     # Only add login_customer_id if it's set and valid (10 digits)
-    login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
+    login_customer_id = _get_env_var("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
     if login_customer_id:
         # Remove dashes and validate
         login_customer_id_clean = login_customer_id.replace("-", "")
