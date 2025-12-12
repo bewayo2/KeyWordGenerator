@@ -36,3 +36,7 @@ check_env.py
 fix_env.py
 debug_request.py
 
+# Guide documentation files
+ENABLE_API.md
+TEST_ACCOUNTS.md
+
