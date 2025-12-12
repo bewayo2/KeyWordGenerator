@@ -12,7 +12,7 @@ This guide explains how to configure your environment variables (secrets) for St
 
 ## Secrets Format
 
-Add all your environment variables in the following format:
+Add all your environment variables in the following format (flat structure):
 
 ```toml
 google_ads_developer_token = "your_developer_token_here"
@@ -25,9 +25,11 @@ openai_api_key = "your_openai_api_key_here"
 
 **Important Notes:**
 - Use **lowercase with underscores** (e.g., `google_ads_client_id` not `GOOGLE_ADS_CLIENT_ID`)
+- Use **flat structure** (all keys at the top level, not nested)
 - The app will automatically convert these to the expected format
-- Do NOT include quotes around the values in the TOML file
+- Do NOT include quotes around the values in the TOML file (Streamlit will handle quotes automatically)
 - Each secret should be on its own line
+- Make sure there are no extra spaces before or after the `=` sign
 
 ## Example Secrets File
 

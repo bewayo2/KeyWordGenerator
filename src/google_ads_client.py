@@ -14,7 +14,16 @@ def _get_env_var(var_name: str, default: str = None) -> str:
         import streamlit as st
         if hasattr(st, "secrets") and st.secrets:
             try:
-                # Try to get from Streamlit secrets (nested access with dots)
+                # Try flat access first: st.secrets["google_ads_client_id"]
+                secret_key = var_name.lower()
+                if secret_key in st.secrets:
+                    value = st.secrets[secret_key]
+                    return value if value else default
+            except (KeyError, AttributeError, TypeError):
+                pass
+            
+            try:
+                # Try nested access: st.secrets.google_ads.client_id
                 keys = var_name.lower().split("_")
                 value = st.secrets
                 for key in keys:
